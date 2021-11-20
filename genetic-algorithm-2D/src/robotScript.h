@@ -17,8 +17,7 @@ public:
     void update(atta::Entity entity, float dt) override;
 
 private:
-    bool isInCollision(atta::EntityId eid, atta::TransformComponent* t);
-    float sensorActionResult(atta::EntityId eid, atta::TransformComponent* t, atta::GeneComponent* g);
+    float sensorActionResult(atta::EntityId eid, atta::TransformComponent* t, GeneComponent* g);
 };
 
 ATTA_REGISTER_SCRIPT(RobotScript)

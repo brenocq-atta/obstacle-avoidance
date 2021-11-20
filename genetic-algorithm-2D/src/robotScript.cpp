@@ -5,6 +5,7 @@
 // By Breno Cunha Queiroz
 //--------------------------------------------------
 #include "robotScript.h"
+#include "common.h"
 #include <atta/componentSystem/componentManager.h>
 #include <atta/graphicsSystem/drawer.h>
 using namespace atta;
@@ -20,32 +21,32 @@ void RobotScript::update(Entity entity, float dt)
     float speed = gene->linearVelocity*dt;
 
     //----- Initialize with random position -----//
-    if(t->position.z == 0.0f)
-    {
-        t->position.z = 0.01f;
-        while(isInCollision(entity.getId(), t))
-        {
-            t->position.x = (rand()%8000/1000.0f)-4.0f;
-            t->position.y = (rand()%8000/1000.0f)-4.0f;
-            t->orientation.rotateAroundAxis(vec3(0,0,1), 2*(rand()%314/314.0f));
-        }
+    //if(t->position.z == 0.0f)
+    //{
+    //    t->position.z = 0.01f;
+    //    while(isInCollision(entity.getId(), t))
+    //    {
+    //        t->position.x = (rand()%8000/1000.0f)-4.0f;
+    //        t->position.y = (rand()%8000/1000.0f)-4.0f;
+    //        t->orientation.rotateAroundAxis(vec3(0,0,1), 2*(rand()%314/314.0f));
+    //    }
 
-        gene->linearVelocity = rand()%1000/1000.0f*GeneComponent::maxLinearVelocity;
-        gene->angularVelocity = rand()%1000/1000.0f*GeneComponent::maxAngularVelocity;
-        for(unsigned i = 0; i < GeneComponent::numSensors; i++)
-        {
-            gene->sensorAngle[i] = (rand()%1000/1000.0f)*2*M_PI;
-            gene->sensorRange[i] = rand()%1000/1000.0f*GeneComponent::maxRange;
-            gene->sensorAction[i] = (rand()%2000/1000.0f) - 1.0f;
-        }
-    }
+    //    gene->linearVelocity = rand()%1000/1000.0f*GeneComponent::maxLinearVelocity;
+    //    gene->angularVelocity = rand()%1000/1000.0f*GeneComponent::maxAngularVelocity;
+    //    for(unsigned i = 0; i < GeneComponent::numSensors; i++)
+    //    {
+    //        gene->sensorAngle[i] = (rand()%1000/1000.0f)*2*M_PI;
+    //        gene->sensorRange[i] = rand()%1000/1000.0f*GeneComponent::maxRange;
+    //        gene->sensorAction[i] = (rand()%2000/1000.0f) - 1.0f;
+    //    }
+    //}
 
     //----- Update position -----//
     t->position.x += cos(angle)*speed;
     t->position.y += sin(angle)*speed;
 
     // Solve collision
-    if(isInCollision(entity.getId(), t))
+    if(common::isInCollision(entity.getId(), t))
     {
         t->position.x -= cos(angle)*speed;
         t->position.y -= sin(angle)*speed;
@@ -70,55 +71,7 @@ void RobotScript::update(Entity entity, float dt)
 
 }
 
-bool RobotScript::isInCollision(EntityId eid, TransformComponent* t)
-{
-    bool inCollision = false;
-    const float radius = t->scale.x/2.0f;
-
-    // Check wall collision
-    if(t->position.x > WORLD_SIZE-radius || 
-        t->position.x < -WORLD_SIZE+radius ||
-        t->position.y > WORLD_SIZE-radius || 
-        t->position.y < -WORLD_SIZE+radius)
-        inCollision = true;
-
-    // Check obstacle collision
-    Factory* factory = ComponentManager::getPrototypeFactory(10);
-    for(EntityId obstacle : factory->getCloneIds())
-    {
-        TransformComponent* tc = ComponentManager::getEntityComponent<TransformComponent>(obstacle);
-
-        float obsRadius = tc->scale.x/2.0f;
-        float dist = (vec2(tc->position) - vec2(t->position)).length();
-
-        if(dist <= radius + obsRadius)
-        {
-            inCollision = true;
-            break;
-        }
-    }
-
-    // Check robot collision
-    factory = ComponentManager::getPrototypeFactory(9);
-    for(EntityId robot :  factory->getCloneIds())
-    {
-        if(robot == eid)
-            continue;
-        TransformComponent* tc = ComponentManager::getEntityComponent<TransformComponent>(robot);
-
-        float oRadius = tc->scale.x/2.0f;
-        float dist = (vec2(tc->position) - vec2(t->position)).length();
-
-        if(dist <= radius + oRadius)
-        {
-            inCollision = true;
-            break;
-        }
-    }
-    return inCollision;
-}
-
-float RobotScript::sensorActionResult(atta::EntityId eid, atta::TransformComponent* t, atta::GeneComponent* g)
+float RobotScript::sensorActionResult(EntityId eid, TransformComponent* t, GeneComponent* g)
 {
     float sensorActionResult = 0;
 

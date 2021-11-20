@@ -17,12 +17,19 @@ public:
 	void onStart() override;
 	void onStop() override;
 	void onUpdateBefore(float delta) override;
+	void onUpdateAfter(float delta) override;
 
     void onUIRender() override;
 
     void onAttaLoop() override;
 private:
     void randomizeObstacles();
+    void randomizeRobotsPositions();
+    void randomizeRobotsGenes();
+    void updateRobotsBounds();
+    void updateRobotsFitness();
+    void crossRobots();
+    void mutateRobots();
 
     const float _maxIterationTime;
     float _currIterationTime;

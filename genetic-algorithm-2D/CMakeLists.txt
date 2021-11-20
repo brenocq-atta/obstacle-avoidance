@@ -18,3 +18,7 @@ add_library(robotScript SHARED
 add_library(geneComponent SHARED
     src/geneComponent.cpp
 )
+
+add_library(GAComponent SHARED
+    src/GAComponent.cpp
+)
