@@ -19,7 +19,7 @@ struct GAComponent final : public Component
     std::vector<bnd2f> robotBounds;// For each robot, the area explored
     float mutationRate;
     uint32_t crossingType;
-    float fitnessSmooth;
+    uint32_t fitnessSmooth;
     uint32_t predationInterval;
 
     uint32_t currGen;// Current generation
@@ -40,7 +40,7 @@ inline ComponentRegistry::Description TypedComponentRegistry<GAComponent>::descr
         { ComponentRegistry::AttributeType::FLOAT32, offsetof(GAComponent, mutationRate), "mutationRate", 0.0f, 1.0f, 0.05f },
         { ComponentRegistry::AttributeType::UINT32, offsetof(GAComponent, crossingType), "crossingType", {}, {}, {}, 
             {"Best fitness", "Best smooth"} },
-        { ComponentRegistry::AttributeType::FLOAT32, offsetof(GAComponent, fitnessSmooth), "fitnessSmooth", 1.0f, 10.0f, 1.0f },
+        { ComponentRegistry::AttributeType::UINT32, offsetof(GAComponent, fitnessSmooth), "fitnessSmooth", 1u, 10u },
         { ComponentRegistry::AttributeType::UINT32, offsetof(GAComponent, predationInterval), "predationInterval", 1u, 50u },
 
         { ComponentRegistry::AttributeType::UINT32, offsetof(GAComponent, currGen), "currGen", 1u, 1000u },

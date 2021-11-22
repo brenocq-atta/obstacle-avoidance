@@ -20,27 +20,6 @@ void RobotScript::update(Entity entity, float dt)
     float angle = -t->orientation.toEuler().z;
     float speed = gene->linearVelocity*dt;
 
-    //----- Initialize with random position -----//
-    //if(t->position.z == 0.0f)
-    //{
-    //    t->position.z = 0.01f;
-    //    while(isInCollision(entity.getId(), t))
-    //    {
-    //        t->position.x = (rand()%8000/1000.0f)-4.0f;
-    //        t->position.y = (rand()%8000/1000.0f)-4.0f;
-    //        t->orientation.rotateAroundAxis(vec3(0,0,1), 2*(rand()%314/314.0f));
-    //    }
-
-    //    gene->linearVelocity = rand()%1000/1000.0f*GeneComponent::maxLinearVelocity;
-    //    gene->angularVelocity = rand()%1000/1000.0f*GeneComponent::maxAngularVelocity;
-    //    for(unsigned i = 0; i < GeneComponent::numSensors; i++)
-    //    {
-    //        gene->sensorAngle[i] = (rand()%1000/1000.0f)*2*M_PI;
-    //        gene->sensorRange[i] = rand()%1000/1000.0f*GeneComponent::maxRange;
-    //        gene->sensorAction[i] = (rand()%2000/1000.0f) - 1.0f;
-    //    }
-    //}
-
     //----- Update position -----//
     t->position.x += cos(angle)*speed;
     t->position.y += sin(angle)*speed;
@@ -56,19 +35,6 @@ void RobotScript::update(Entity entity, float dt)
     // Rotate based on sensor input
     float sensorAction = sensorActionResult(entity.getId(), t, gene);
     t->orientation.rotateAroundAxis(vec3(0,0,1), sensorAction);
-
-    //----- Draw sensor lines -----//
-    //for(unsigned i = 0; i < GeneComponent::numSensors; i++)
-    //{
-    //    float sensorAngle = angle+gene->sensorAngle[i];
-    //    Drawer::add<Drawer::Line>(Drawer::Line(
-    //                vec3(t->position.x, t->position.y, 0.05), 
-    //                vec3(t->position.x+cos(sensorAngle)*gene->sensorRange[i], t->position.y+sin(sensorAngle)*gene->sensorRange[i], 0.05),
-    //                vec4(1,0,0,1),
-    //                vec4(1,0,0,1)),
-    //                StringId("robotSensor"));
-    //}
-
 }
 
 float RobotScript::sensorActionResult(EntityId eid, TransformComponent* t, GeneComponent* g)

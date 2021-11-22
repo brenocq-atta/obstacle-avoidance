@@ -8,6 +8,7 @@
 #define PROJECT_SCRIPT_H
 #include <atta/pch.h>
 #include <atta/scriptSystem/projectScript.h>
+#include <atta/componentSystem/base.h>
 
 class Project : public atta::ProjectScript
 {
@@ -28,8 +29,8 @@ private:
     void randomizeRobotsGenes();
     void updateRobotsBounds();
     void updateRobotsFitness();
-    void crossRobots();
-    void mutateRobots();
+    void crossRobots(atta::EntityId bestRobot);
+    void mutateRobots(atta::EntityId bestRobot);
 
     const float _maxIterationTime;
     float _currIterationTime;

@@ -79,9 +79,38 @@ void Project::onUpdateAfter(float delta)
         {
             // Finished also one generation
             ga->currEval = 1;
-            crossRobots();
-            mutateRobots();
 
+            // Calculate best robot
+            EntityId bestRobot = -1;
+            float bestFitness = 0;
+            for(unsigned i = 0; i < ga->robotFitness.back().size(); i++)
+            {
+                unsigned numValues = ga->crossingType == 0 ? ga->fitnessSmooth : 1;
+
+                // Calculate mean
+                float mean = 0;
+                int qty = 0;
+                for(unsigned j = std::max(unsigned(ga->robotFitness.size()-numValues), 0u); j < ga->robotFitness.size(); j++)
+                {
+                    mean = (mean*qty + ga->robotFitness[j][i])/float(qty+1);
+                    qty++;
+                    if(i == 0)
+                        LOG_DEBUG("Project", "j: $0, mean: $1", j, mean);
+                }
+
+                if(mean >= bestFitness)
+                {
+                    bestRobot = EntityId(i);
+                    bestFitness = mean;
+                }
+            }
+            LOG_SUCCESS("Project", "Generation finished, the best robot was [w]$0[], with fitness of [w]$1[]", 11+bestRobot, bestFitness);
+
+            // Crossing and mutation
+            crossRobots(bestRobot);
+            mutateRobots(bestRobot);
+
+            // Add data to next generation
             Factory* factory = ComponentManager::getPrototypeFactory(ROBOT_PROTOTYPE_EID);
             ga->robotFitness.push_back(std::vector<float>(factory->getMaxClones()));
             ga->currGen++;
@@ -208,23 +237,11 @@ void Project::updateRobotsFitness()
     }
 }
 
-void Project::crossRobots()
+void Project::crossRobots(EntityId bestRobot)
 {
     Factory* factory = ComponentManager::getPrototypeFactory(ROBOT_PROTOTYPE_EID);
     GAComponent* ga = ComponentManager::getEntityComponent<GAComponent>(GA_EID);
 
-    std::vector<float> robotFitness = ga->robotFitness.back();
-
-    EntityId bestRobot = -1;
-    float bestFitness = 0;
-    for(unsigned i = 0; i < robotFitness.size(); i++)
-        if(robotFitness[i] >= bestFitness)
-        {
-            bestRobot = EntityId(i);
-            bestFitness = robotFitness[i];
-        }
-
-    LOG_SUCCESS("Project", "Generation finished, the best robot was [w]$0[], with fitness of [w]$1[]", factory->getFirstCloneId()+bestRobot, bestFitness);
     GeneComponent* bestGene = ComponentManager::getEntityComponent<GeneComponent>(factory->getFirstCloneId()+bestRobot);
 
     unsigned i = -1;
@@ -240,28 +257,17 @@ void Project::crossRobots()
         gene->angularVelocity = (gene->angularVelocity+bestGene->angularVelocity)/2.0f;
         for(unsigned i = 0; i < GeneComponent::numSensors; i++)
         {
-            gene->sensorAngle[i] = (gene->sensorAngle[i]+bestGene->sensorAngle[i])/2.0f;
+            gene->sensorAngle[i] = common::angleAverage(gene->sensorAngle[i], bestGene->sensorAngle[i]);
             gene->sensorRange[i] = (gene->sensorRange[i]+bestGene->sensorRange[i])/2.0f;
             gene->sensorAction[i] = (gene->sensorAction[i]+bestGene->sensorAction[i])/2.0f;
         }
     }
 }
 
-void Project::mutateRobots()
+void Project::mutateRobots(EntityId bestRobot)
 {
     Factory* factory = ComponentManager::getPrototypeFactory(ROBOT_PROTOTYPE_EID);
     GAComponent* ga = ComponentManager::getEntityComponent<GAComponent>(GA_EID);
-
-    std::vector<float> robotFitness = ga->robotFitness.back();
-
-    EntityId bestRobot = -1;
-    float bestFitness = 0;
-    for(unsigned i = 0; i < robotFitness.size(); i++)
-        if(robotFitness[i] >= bestFitness)
-        {
-            bestRobot = EntityId(i);
-            bestFitness = robotFitness[i];
-        }
 
     unsigned i = -1;
     for(EntityId robot : factory->getCloneIds())
@@ -289,7 +295,7 @@ void Project::mutateRobots()
             gene->angularVelocity = (gene->angularVelocity+randomGene.angularVelocity)/2.0f;
             for(unsigned i = 0; i < GeneComponent::numSensors; i++)
             {
-                gene->sensorAngle[i] = (gene->sensorAngle[i]+randomGene.sensorAngle[i])/2.0f;
+                gene->sensorAngle[i] = common::angleAverage(gene->sensorAngle[i], randomGene.sensorAngle[i]);
                 gene->sensorRange[i] = (gene->sensorRange[i]+randomGene.sensorRange[i])/2.0f;
                 gene->sensorAction[i] = (gene->sensorAction[i]+randomGene.sensorAction[i])/2.0f;
             }
@@ -303,17 +309,20 @@ void Project::onUIRender()
     std::vector<float> bestPerGen;
 
     GAComponent* ga = ComponentManager::getEntityComponent<GAComponent>(GA_EID);
-    for(auto robotsFitness : ga->robotFitness)
+    if(ga && ga->robotFitness.size() > 0)
     {
-        float m = 0;
-        for(float fitness : robotsFitness)
-            m = std::max(m, fitness);
-        bestPerGen.push_back(m);
+        for(auto robotsFitness : ga->robotFitness)
+        {
+            float m = 0;
+            for(float fitness : robotsFitness)
+                m = std::max(m, fitness);
+            bestPerGen.push_back(m);
+        }
+
+        ImGui::Text("Best robot fitness");
+        ImGui::PlotLines("###BestRobotFitness", bestPerGen.data(), bestPerGen.size(),
+            0, NULL, 0.0f, 1.0f, ImVec2(1500.0f, 120.0f));
+
     }
-
-    ImGui::Text("Best robot fitness");
-    ImGui::PlotLines("###BestRobotFitness", bestPerGen.data(), bestPerGen.size(),
-        0, NULL, 0.0f, 1.0f, ImVec2(1500.0f, 120.0f));
-
     ImGui::End();
 }

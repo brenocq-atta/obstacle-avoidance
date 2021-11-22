@@ -62,5 +62,20 @@ namespace common
         }
         return inCollision;
     }
+
+    float angleAverage(float angle0, float angle1)
+    {
+        float a = std::min(angle0, angle1);
+        float b = std::max(angle0, angle1);
+        if(b-a < M_PI)
+            return (b+a)/2.0f;
+        else
+        {
+            float res = (a+2*M_PI+b)/2.0f;
+            if(res >= 2*M_PI)
+                res -= 2*M_PI;
+            return res;
+        }
+    }
 }
 #endif// COMMON_H
